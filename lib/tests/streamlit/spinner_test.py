@@ -128,3 +128,22 @@ class SpinnerTest(DeltaGeneratorTestCase):
                 == WidthConfigFields.USE_CONTENT.value
             )
             assert el.width_config.use_content is True
+
+    def test_spinner_no_transient_when_exiting_quickly(self):
+        """Test that no transient message is sent when spinner exits before timer fires.
+
+        This is a regression test for a race condition where rapid reruns would cause
+        unnecessary clear_transient messages to be sent, leading to stale element removal.
+        The spinner has a 0.5s delay before showing, so if the context exits before that,
+        no transient should be created or cleared.
+        """
+        with st.spinner("quick spinner"):
+            # Exit immediately, before the 0.5s timer fires
+            time.sleep(0.1)
+
+        # Verify no transient messages were sent (queue should be empty)
+        # This is the key fix: previously, a clear_transient would always be sent
+        # even when no transient was created, causing race conditions.
+        assert len(self.forward_msg_queue) == 0, (
+            "No transient message should be sent when spinner exits before timer fires"
+        )

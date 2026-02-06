@@ -123,15 +123,18 @@ class SpinnerMixin:
             return
 
         display_message = True
+        transient_created = False
         display_message_lock = threading.Lock()
         timer: threading.Timer | None = None
         try:
 
             def set_message() -> None:
+                nonlocal transient_created
                 with display_message_lock:
                     if display_message:
                         # Ignore the DeltaGenerator conveniences because Transients are special
                         enqueue_message(create_transient())
+                        transient_created = True
 
             timer = threading.Timer(DELAY_SECS, set_message)
             add_script_run_ctx(timer)
@@ -144,7 +147,11 @@ class SpinnerMixin:
             with display_message_lock:
                 display_message = False
 
-                enqueue_message(clear_transient())
+                # Only send the clear message if we actually created a transient.
+                # This prevents unnecessary clear messages during rapid reruns
+                # where the timer is cancelled before firing.
+                if transient_created:
+                    enqueue_message(clear_transient())
 
     @property
     def dg(self) -> DeltaGenerator:
