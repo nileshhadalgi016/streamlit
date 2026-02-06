@@ -617,8 +617,8 @@ class CommonCacheTest(DeltaGeneratorTestCase):
         [("cache_data", cache_data), ("cache_resource", cache_resource)]
     )
     def test_with_spinner(self, _, cache_decorator):
-        """If the show_spinner flag is set, there should be one element in the
-        report queue.
+        """If the show_spinner flag is set but function completes before the spinner
+        delay (0.5s), the report queue should be empty because no spinner was shown.
         """
 
         @cache_decorator(show_spinner=True)
@@ -626,14 +626,14 @@ class CommonCacheTest(DeltaGeneratorTestCase):
             return x
 
         function_with_spinner(3)
-        assert not self.forward_msg_queue.is_empty()
+        assert self.forward_msg_queue.is_empty()
 
     @parameterized.expand(
         [("cache_data", cache_data), ("cache_resource", cache_resource)]
     )
     def test_with_custom_text_spinner(self, _, cache_decorator):
-        """If the show_spinner flag is set, there should be one element in the
-        report queue.
+        """If the show_spinner flag is set with custom text but function completes
+        before the spinner delay (0.5s), the report queue should be empty.
         """
 
         @cache_decorator(show_spinner="CUSTOM_TEXT")
@@ -641,14 +641,14 @@ class CommonCacheTest(DeltaGeneratorTestCase):
             return x
 
         function_with_spinner_custom_text(3)
-        assert not self.forward_msg_queue.is_empty()
+        assert self.forward_msg_queue.is_empty()
 
     @parameterized.expand(
         [("cache_data", cache_data), ("cache_resource", cache_resource)]
     )
     def test_with_empty_text_spinner(self, _, cache_decorator):
-        """If the show_spinner flag is set, even if it is empty text,
-        there should be one element in the report queue.
+        """If the show_spinner flag is set with empty text but function completes
+        before the spinner delay (0.5s), the report queue should be empty.
         """
 
         @cache_decorator(show_spinner="")
@@ -656,14 +656,14 @@ class CommonCacheTest(DeltaGeneratorTestCase):
             return x
 
         function_with_spinner_empty_text(3)
-        assert not self.forward_msg_queue.is_empty()
+        assert self.forward_msg_queue.is_empty()
 
     @parameterized.expand(
         [("cache_data", cache_data), ("cache_resource", cache_resource)]
     )
     def test_spinner_with_nested_cached_functions(self, _, cache_decorator):
-        """If a cached function calls another cached function, only one spinner
-        should be created.
+        """If a cached function calls another cached function and both complete
+        before the spinner delay (0.5s), no spinner should be shown.
         """
 
         @cache_decorator(show_spinner="")
@@ -675,23 +675,8 @@ class CommonCacheTest(DeltaGeneratorTestCase):
             return inner(x)
 
         outer(3)
-        assert not self.forward_msg_queue.is_empty()
-
-        # The spinner uses a transient element and shows the spinner only
-        # after a timeout. Instead of mocking the time and waiting for the
-        # timeout, we check for the transient element with an empty set
-        # of elements. This represents the spinner element disappearing.
-        transient_elements_count = 0
-        for msg in self.forward_msg_queue._queue:
-            if (
-                msg.HasField("delta")
-                and msg.delta.HasField("new_transient")
-                and len(msg.delta.new_transient.elements) == 0
-            ):
-                transient_elements_count += 1
-        # Since we automatically prevent spinners for nested cached functions,
-        # there should only be a single transient spinner element.
-        assert transient_elements_count == 1
+        # Fast functions don't show spinner, so queue should be empty.
+        assert self.forward_msg_queue.is_empty()
 
     @parameterized.expand(
         [

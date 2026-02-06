@@ -1165,10 +1165,10 @@ class DataEditorTest(DeltaGeneratorTestCase):
 
     def test_shows_cached_widget_replay_warning(self):
         """Test that a warning is shown when this widget is used inside a cached function."""
-        st.cache_data(lambda: st.data_editor(pd.DataFrame()))()
+        st.cache_data(show_spinner=False)(lambda: st.data_editor(pd.DataFrame()))()
 
         # The widget itself is still created, so we need to go back one element more:
-        el = self.get_delta_from_queue(-3).new_element.exception
+        el = self.get_delta_from_queue(-2).new_element.exception
         assert el.type == "CachedWidgetWarning"
         assert el.is_warning
 

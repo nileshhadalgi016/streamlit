@@ -214,19 +214,19 @@ hello
 
     def test_checkbox_shows_cached_widget_replay_warning(self):
         """Test that a warning is shown when this widget is used inside a cached function."""
-        st.cache_data(lambda: st.checkbox("the label"))()
+        st.cache_data(show_spinner=False)(lambda: st.checkbox("the label"))()
 
         # The widget itself is still created, so we need to go back one element more:
-        el = self.get_delta_from_queue(-3).new_element.exception
+        el = self.get_delta_from_queue(-2).new_element.exception
         assert el.type == "CachedWidgetWarning"
         assert el.is_warning
 
     def test_toggle_shows_cached_widget_replay_warning(self):
         """Test that a warning is shown when this widget is used inside a cached function."""
-        st.cache_data(lambda: st.toggle("the label"))()
+        st.cache_data(show_spinner=False)(lambda: st.toggle("the label"))()
 
         # The widget itself is still created, so we need to go back one element more:
-        el = self.get_delta_from_queue(-3).new_element.exception
+        el = self.get_delta_from_queue(-2).new_element.exception
         assert el.type == "CachedWidgetWarning"
         assert el.is_warning
 

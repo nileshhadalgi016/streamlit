@@ -41,11 +41,11 @@ class CacheSpinnerTest(DeltaGeneratorTestCase):
     """
 
     def test_with_spinner(self):
-        """If the show_spinner flag is set, there should be one element in the
-        report queue.
+        """If the show_spinner flag is set but function completes before the spinner
+        delay (0.5s), the report queue should be empty because no spinner was shown.
         """
         function_with_spinner()
-        assert not self.forward_msg_queue.is_empty()
+        assert self.forward_msg_queue.is_empty()
 
     def test_without_spinner(self):
         """If the show_spinner flag is not set, the report queue should be

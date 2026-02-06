@@ -452,10 +452,12 @@ class AltairChartTest(DeltaGeneratorTestCase):
         df = pd.DataFrame([["A", "B", "C", "D"], [28, 55, 43, 91]], index=["a", "b"]).T
         chart = alt.Chart(df).mark_bar().encode(x="a", y="b").add_params(point)
 
-        st.cache_data(lambda: st.altair_chart(chart, on_select="rerun"))()
+        st.cache_data(show_spinner=False)(
+            lambda: st.altair_chart(chart, on_select="rerun")
+        )()
 
         # The widget itself is still created, so we need to go back one element more:
-        el = self.get_delta_from_queue(-3).new_element.exception
+        el = self.get_delta_from_queue(-2).new_element.exception
         assert el.type == "CachedWidgetWarning"
         assert el.is_warning
 
@@ -1241,7 +1243,7 @@ class VegaLiteChartTest(DeltaGeneratorTestCase):
         """Test that a warning is shown when this is used with selections activated
         inside a cached function."""
 
-        st.cache_data(
+        st.cache_data(show_spinner=False)(
             lambda: st.vega_lite_chart(
                 df1,
                 {
@@ -1255,7 +1257,7 @@ class VegaLiteChartTest(DeltaGeneratorTestCase):
         )()
 
         # The widget itself is still created, so we need to go back one element more:
-        el = self.get_delta_from_queue(-3).new_element.exception
+        el = self.get_delta_from_queue(-2).new_element.exception
         assert el.type == "CachedWidgetWarning"
         assert el.is_warning
 
