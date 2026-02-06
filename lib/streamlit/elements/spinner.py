@@ -123,6 +123,7 @@ class SpinnerMixin:
             return
 
         display_message = True
+        # Tracks whether the timer fired and created a transient; guarded by display_message_lock.
         transient_created = False
         display_message_lock = threading.Lock()
         timer: threading.Timer | None = None

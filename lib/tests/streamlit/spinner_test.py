@@ -134,12 +134,14 @@ class SpinnerTest(DeltaGeneratorTestCase):
 
         This is a regression test for a race condition where rapid reruns would cause
         unnecessary clear_transient messages to be sent, leading to stale element removal.
-        The spinner has a 0.5s delay before showing, so if the context exits before that,
-        no transient should be created or cleared.
+        The spinner has a DELAY_SECS delay before showing, so if the context exits before
+        that, no transient should be created or cleared.
         """
+        from streamlit.elements.spinner import DELAY_SECS
+
         with st.spinner("quick spinner"):
-            # Exit immediately, before the 0.5s timer fires
-            time.sleep(0.1)
+            # Exit before the timer fires
+            time.sleep(DELAY_SECS * 0.2)
 
         # Verify no transient messages were sent (queue should be empty)
         # This is the key fix: previously, a clear_transient would always be sent
