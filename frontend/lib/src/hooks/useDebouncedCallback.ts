@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useRef } from "react"
+
+import useTimeout from "./useTimeout"
 
 /**
  * Interface for the return value of the useDebouncedCallback hook.
@@ -61,33 +63,30 @@ export function useDebouncedCallback<A extends unknown[]>(
   callback: (...args: A) => void,
   delay: number
 ): UseDebouncedCallbackReturn<A> {
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const argsRef = useRef<A>()
 
-  const cancel = useCallback((): void => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-      timeoutRef.current = null
-    }
-  }, [])
+  const { clear, restart } = useTimeout(
+    () => {
+      if (argsRef.current) {
+        callback(...argsRef.current)
+        argsRef.current = undefined
+      }
+    },
+    delay,
+    { autoStart: false }
+  )
 
-  // Clear all timeouts when the component unmounts
-  useEffect(() => cancel, [cancel])
+  const cancel = useCallback((): void => {
+    clear()
+    argsRef.current = undefined
+  }, [clear])
 
   const debouncedCallback = useCallback(
     (...args: A) => {
       argsRef.current = args
-
-      cancel()
-
-      timeoutRef.current = setTimeout(() => {
-        if (argsRef.current) {
-          callback(...argsRef.current)
-          argsRef.current = undefined
-        }
-      }, delay)
+      restart()
     },
-    [callback, delay, cancel]
+    [restart]
   )
 
   return {

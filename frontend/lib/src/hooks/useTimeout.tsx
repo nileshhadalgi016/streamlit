@@ -18,7 +18,15 @@ import { useCallback, useEffect, useRef } from "react"
 
 export type UseTimeoutReturn = {
   clear: () => void
-  restart: () => void
+  restart: (timeoutMsOverride?: number | null) => void
+}
+
+export type UseTimeoutOptions = {
+  /**
+   * Whether to automatically schedule a timeout on mount and when timeoutMs
+   * changes. When false, call `restart` to schedule manually.
+   */
+  autoStart?: boolean
 }
 
 /**
@@ -34,35 +42,55 @@ export type UseTimeoutReturn = {
  * @param callback to be called when the timeout delay is over
  * @param timeoutMs the delay in milliseconds after which the timeout callback
  * is called, or null to disable timeout
- * @returns an object with clear and restart functions to control the timeout
+ * @param options optional timeout behavior configuration
+ * @param options.autoStart when true (default), schedules a timeout automatically
+ * when mounted and when timeoutMs changes. when false, the timeout is only
+ * scheduled when `restart` is called.
+ * @returns an object with clear and restart functions to control the timeout.
+ * `restart` optionally accepts a one-off timeout override in milliseconds.
  */
 function useTimeout(
   callback: () => void,
-  timeoutMs: number | null
+  timeoutMs: number | null,
+  options: UseTimeoutOptions = {}
 ): UseTimeoutReturn {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const callbackRef = useRef<() => void>(callback)
+  const { autoStart = true } = options
 
   useEffect(() => {
     callbackRef.current = callback
   }, [callback])
 
-  const setupTimeout = useCallback(() => {
-    // Clear any existing timeout
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-      timeoutRef.current = null
-    }
+  const setupTimeout = useCallback(
+    (timeoutMsOverride: number | null = timeoutMs) => {
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
+      }
 
-    // Only set timeout if timeoutMs is not null
-    if (timeoutMs !== null) {
-      timeoutRef.current = setTimeout(() => {
-        callbackRef.current()
-      }, timeoutMs)
-    }
-  }, [timeoutMs])
+      // Only set timeout if timeoutMs is not null
+      if (timeoutMsOverride !== null) {
+        // eslint-disable-next-line no-restricted-globals -- This hook is the centralized wrapper around setTimeout.
+        timeoutRef.current = setTimeout(() => {
+          callbackRef.current()
+        }, timeoutMsOverride)
+      }
+    },
+    [timeoutMs]
+  )
 
   useEffect(() => {
+    if (!autoStart) {
+      return () => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current)
+          timeoutRef.current = null
+        }
+      }
+    }
+
     setupTimeout()
 
     return () => {
@@ -71,7 +99,7 @@ function useTimeout(
         timeoutRef.current = null
       }
     }
-  }, [setupTimeout])
+  }, [autoStart, setupTimeout])
 
   const clear = useCallback(() => {
     if (timeoutRef.current) {
@@ -80,9 +108,12 @@ function useTimeout(
     }
   }, [])
 
-  const restart = useCallback(() => {
-    setupTimeout()
-  }, [setupTimeout])
+  const restart = useCallback(
+    (timeoutMsOverride?: number | null) => {
+      setupTimeout(timeoutMsOverride)
+    },
+    [setupTimeout]
+  )
 
   return { clear, restart }
 }

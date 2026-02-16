@@ -50,6 +50,7 @@ export function debounce(delay: number, fn: any): any {
       clearTimeout(timerId)
     }
 
+    // eslint-disable-next-line no-restricted-globals -- Shared utility debounce is framework-agnostic and cannot use hooks.
     timerId = setTimeout(() => {
       fn(...args)
       timerId = null
@@ -354,6 +355,7 @@ export function notUndefined<T>(value: T | undefined): value is T {
  * @param ms number
  */
 export function timeout(ms: number): Promise<void> {
+  // eslint-disable-next-line no-restricted-globals -- Promise-based sleep utility is intentionally non-React.
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
