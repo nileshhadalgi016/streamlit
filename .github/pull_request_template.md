@@ -1,15 +1,33 @@
-## Describe your changes
+<!-- Please fill this out with concrete details (no placeholders) -->
 
-## Screenshot or video (only for visual changes)
+## Summary of changes
 
-## GitHub Issue Link (if applicable)
+## Related GitHub issues / context
 
-## Testing Plan
+<!-- If this PR is related to a GitHub issue, link it here. If this adds/changes user-facing API or introduces a new feature, link the approval context here. -->
 
-- Explanation of why no additional tests are needed
-- Unit Tests (JS and/or Python)
-- E2E Tests
-- Any manual testing needed?
+## Screenshots / video
+
+<!-- For visual changes only -->
+
+## Testing
+
+<!-- Check all that apply. Add a short note where requested. -->
+
+- [ ] Unit tests (JS and/or Python)
+- [ ] E2E tests
+- [ ] Manually tested
+  - Notes:
+- [ ] No tests needed
+  - Rationale:
+
+## AI assistance disclosure
+
+<!-- Check one option and add notes where applicable. -->
+
+- [ ] No AI tools were used
+- [ ] AI tools were used
+  - Tool(s):
 
 ---
 
